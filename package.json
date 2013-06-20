@@ -1,0 +1,24 @@
+{
+  "name": "jsonCrypto",
+  "version": "0.0.0",
+  "description": "RSA and AES json encryption",
+  "main": "index.js",
+  "scripts": {
+    "install": "grunt install",
+    "test": "grunt test"
+  },
+  "repository": "",
+  "author": "",
+  "license": "BSD",
+  "devDependencies": {
+    "sinon": "~1.7.2",
+    "mocha": "~1.10.0",
+    "grunt": "~0.4.1",
+    "karma": "~0.8.6",
+    "grunt-karma": "~0.4.4"
+  },
+  "dependencies": {
+    "node-forge": "git://github.com/digitalbazaar/forge.git",
+    "canonical-json": "0.0.3"
+  }
+}
