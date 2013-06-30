@@ -33,6 +33,12 @@ var privatePEMString = privatePEMBuffer.toString('utf8');
 var publicPEMString= publicPEMBuffer.toString('utf8');
 
 
+var rootPair = lib.generateKeyPEMBufferPair(MODULUS, EXPONENT);
+var rootPrivatePEMBuffer = rootPair.privatePEM;
+var rootCert = lib.createCert('root', rootPair.publicPEM);
+
+
+
 /*
 ---- for checking with URSA
 var ursa = require('ursa');
@@ -49,8 +55,7 @@ console.log(publicPEMBase64);
 
 
 describe('pouchManager', function () {
-
-  'use strict';
+    'use strict';
     it('1: should be able to gererate a key pair', function (done) {
         var log = masterLog.wrap('1');
         var pair = lib.generateKeyPEMBufferPair(MODULUS, EXPONENT);
@@ -102,7 +107,9 @@ describe('pouchManager', function () {
         var log = masterLog.wrap('5');
         var myObject = {message: 'hello'};
         log('signing object');
-        var signed = lib.signObject(myObject, privatePEMString, publicPEMString, log.wrap('sign'));
+
+        var cert = lib.createCert('myCert', publicPEMBuffer);
+        var signed = lib.signObject(myObject, privatePEMString, cert, log.wrap('sign'));
 
         var sig = "Q4U3Q8B0qHW1J304lEGVFDph6E8QvOlrAvr552eSQGSBvL6YybpdSEUn9XjqhGiF5LgrIRMAzDz+rZ3lZIYzc5QujJfMWBg0kHh47tJ8lNn+KNvk0CDIt2+AW1CvTPZCoDz7K1hnB9gtIFx6h7RkAZNo+1QXwX2mASnwVI9sORmYi0vhfddezlRlz/aVGvBNQcrKNlQWPdef5/qbyNyjU+tDs3UhpnWnKW9zbFSxdl+C33UNbz2qt4jE9wY02wPQofJ4KPCv4eHVPVcLgMURMNwc6IjUNPzhAXjuaD6Sy54Ns5NOpg57FyiBHSOwla7htZ8h64lZ/q8jvVIOHWrODg==";
         log(sig);
@@ -115,7 +122,11 @@ describe('pouchManager', function () {
         var log = masterLog.wrap('6');
         var myObject = {message: 'hello'};
 
-        var signed = lib.signObject(myObject, privatePEMBuffer, publicPEMBuffer, log.wrap('signing'));
+        var cert = lib.createCert('myCert', publicPEMBuffer);
+        var signedCert = lib.signObject(cert, rootPrivatePEMBuffer, rootCert, log.wrap('siging cert with rootCert'));
+
+
+        var signed = lib.signObject(myObject, privatePEMBuffer, signedCert, log.wrap('signing'));
 
 
         //var b = new Buff(JSON.stringify(myObject), 'utf8');
@@ -125,7 +136,7 @@ describe('pouchManager', function () {
         //    throw new Error('could not verify');
         //}
         //log('verified ok with openSSL');
-        var verified = lib.verifyObject(signed, publicPEMBuffer, log.wrap('verifying'));
+        var verified = lib.verifyObject(signed, rootCert, log.wrap('verifying'));
         assert.equal(true, verified, 'should return true');
         done();
     });
@@ -134,7 +145,8 @@ describe('pouchManager', function () {
         var log = masterLog.wrap('7');
         var myObject = {message: 'hello', _id: 'myid'};
         log('signing object');
-        var signed = lib.signObject(myObject, privatePEMBuffer, publicPEMBuffer, log.wrap('sign'));
+        var cert = lib.createCert('myCert', publicPEMBuffer);
+        var signed = lib.signObject(myObject, privatePEMBuffer, cert, log.wrap('sign'));
 
         var sig = "Q4U3Q8B0qHW1J304lEGVFDph6E8QvOlrAvr552eSQGSBvL6YybpdSEUn9XjqhGiF5LgrIRMAzDz+rZ3lZIYzc5QujJfMWBg0kHh47tJ8lNn+KNvk0CDIt2+AW1CvTPZCoDz7K1hnB9gtIFx6h7RkAZNo+1QXwX2mASnwVI9sORmYi0vhfddezlRlz/aVGvBNQcrKNlQWPdef5/qbyNyjU+tDs3UhpnWnKW9zbFSxdl+C33UNbz2qt4jE9wY02wPQofJ4KPCv4eHVPVcLgMURMNwc6IjUNPzhAXjuaD6Sy54Ns5NOpg57FyiBHSOwla7htZ8h64lZ/q8jvVIOHWrODg==";
         log(sig);
@@ -200,5 +212,19 @@ describe('pouchManager', function () {
         done();
 
     });
+     it('10: should be able to sign and verify with generated keys', function (done) {
+        var log = masterLog.wrap('10');
+        var myObject = {message: 'hello'};
+        var pair = lib.generateKeyPEMBufferPair(MODULUS, EXPONENT);
+        log('signing object');
 
+        var cert = lib.createCert('myCert', publicPEMBuffer);
+        var signedCert = lib.signObject(cert, rootPrivatePEMBuffer, rootCert, log.wrap('siging cert with rootCert'));
+
+
+        var signed = lib.signObject(myObject, privatePEMBuffer, signedCert, log.wrap('signing'));
+        var verified = lib.verifyObject(signed, rootCert, log.wrap('verifying'));
+        assert.equal(true, verified, 'should return true');
+        done();
+    });
 });

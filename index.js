@@ -88,15 +88,20 @@ module.exports.generateKeyPEMBufferPair = function(modulus, exponent)
 {
 	var keypair = rsa.generateKeyPair(modulus, exponent);
 	var publicPEMBuffer = new Buff(pki.publicKeyToPem(keypair.publicKey), 'utf8');
-	var privatePEMBuffer = new Buff(pki.publicKeyToPem(keypair.publicKey), 'utf8');
+	var privatePEMBuffer = new Buff(pki.privateKeyToPem(keypair.privateKey), 'utf8');
 	return {publicPEM: publicPEMBuffer, privatePEM: privatePEMBuffer};
 };
 
 
-module.exports.hashAndSignBuffer = function(dataBuffer, privateKeyPEMBuffer, publicKeyPEMBuffer, log){
+module.exports.hashAndSignBuffer = function(dataBuffer, privateKeyPEMBuffer, log){
+	assert.ok(dataBuffer);
+	assert.ok(privateKeyPEMBuffer);
+	assert.ok(log);
+
+
 	log('reading private key');
+	log(privateKeyPEMBuffer.toString('utf8'));
 	var privateKey = pki.privateKeyFromPem(privateKeyPEMBuffer.toString('utf8'));
-	var publicKey = pki.publicKeyFromPem(publicKeyPEMBuffer.toString('utf8'));
 
 	var hashDigest = hashBufferToDigest(dataBuffer, DEFAULT_HASH_METHOD);
 	log.dir(hashDigest);
@@ -107,13 +112,6 @@ module.exports.hashAndSignBuffer = function(dataBuffer, privateKeyPEMBuffer, pub
 
 	log('getting signature bytes');
 	var sigBytes =privateKey.sign(hashDigest);
-	log('verifying');
-	if(!publicKey.verify(hashBytes, sigBytes))
-	{
-		log('could not verify signature');
-		throw new Error('could not verify signature');
-	}
-	log('verified');
 
 	log('creating output buffer');
 
@@ -139,14 +137,14 @@ module.exports.createPublicKeyPEMFingerprintBuffer = function(publicKeyPEMBuff)
 };
 
 
-module.exports.createSignature = function(object, privateKeyPEMBuffer, publicKeyPEMBuffer, log){
+module.exports.createSignature = function(object, privateKeyPEMBuffer, publicCert, log){
 	var objectString = stringify(object);
 	var objectBuff = new Buff(objectString);
 
 	log('hashing');
 	var hashBuf = module.exports.hashBuffer(objectBuff, DEFAULT_HASH_METHOD);
 	log('signing');
-	var sigBuf = module.exports.hashAndSignBuffer(objectBuff, privateKeyPEMBuffer, publicKeyPEMBuffer, log.wrap('sign buffer'));
+	var sigBuf = module.exports.hashAndSignBuffer(objectBuff, privateKeyPEMBuffer, log.wrap('sign buffer'));
 	log('reading public key');
 
 	log('creating signature');
@@ -158,21 +156,15 @@ module.exports.createSignature = function(object, privateKeyPEMBuffer, publicKey
 		digestMethod: DEFAULT_HASH_METHOD,
 		signed: sigBuf.toString(DEFAULT_ENCODING),
 		signedEncoding: DEFAULT_ENCODING,
-		signer: {
-			publicKey:{
-				algorythm: "RSA",
-				bits: "2048",
-				data: publicKeyPEMBuffer.toString(DEFAULT_ENCODING),
-				dateEncoding: DEFAULT_ENCODING,
-				fingerprint: module.exports.createPublicKeyPEMFingerprintBuffer(publicKeyPEMBuffer).toString('hex'),
-				fingerprintEncoding: 'hex'
-			}
-		}
+		signer: publicCert
 	};
 	return that;
 };
 
-module.exports.verifySignature = function(signature, object, publicKeyPEMBuffer, log){
+module.exports.verifySignature = function(signature, object, log){
+
+	var publicCert = signature.signer;
+	var publicKeyPEMBuffer = module.exports.jSONObjectToBuffer(publicCert.key);
 	var publicKey = pki.publicKeyFromPem(publicKeyPEMBuffer.toString('utf8'));
 
 	var objectString = stringify(object);
@@ -193,19 +185,31 @@ module.exports.verifySignature = function(signature, object, publicKeyPEMBuffer,
 	return verified;
 };
 
-module.exports.signObject = function(object, privateKeyPEMBuffer, publicKeyPEMBuffer, log){
+module.exports.signObject = function(object, privateKeyPEMBuffer, publicCert, log){
 	var copy = createSignableObject(object);
 
-	object.signature = module.exports.createSignature(copy, privateKeyPEMBuffer, publicKeyPEMBuffer, log);
+	object.signature = module.exports.createSignature(copy, privateKeyPEMBuffer, publicCert, log);
 	return object;
 };
 
-module.exports.verifyObject = function(object, publicKeyPEMBuffer, log){
+module.exports.verifyObjectIsSigned = function(object, log){
 	var signature = object.signature;
 	var copy = createSignableObject(object);
 
-	var verified = module.exports.verifySignature(signature, copy, publicKeyPEMBuffer, log);
+	var verified = module.exports.verifySignature(signature, copy, log);
 	return verified;
+};
+
+module.exports.verifyObject = function(object, rootCert, log){
+	var verifiedSignature = module.exports.verifyObjectIsSigned(object, log.wrap('verifyObjectIsSigned'));
+	if(verifiedSignature)
+	{
+		return module.exports.verifyCertificateChain(object.signature.signer, rootCert, log.wrap('verifyCertificateChain'));
+	}
+	else
+	{
+		return false;
+	}
 };
 
 module.exports.encrypt = function(object, fieldsToBeEncrypted, rsaKeys, log){
@@ -356,5 +360,42 @@ module.exports.decryptJSON = function(encrypted, fingerprintHex, privateKeyPEMBu
 	var decryptedBuff = new Buff(decryptedHex, 'hex');
 
 	return decryptedBuff;
+};
+
+module.exports.createCert = function(name, publicPEMBuffer){
+	var fingerprint = module.exports.createPublicKeyPEMFingerprintBuffer(publicPEMBuffer);
+	var cert = {
+		name: name,
+		id: fingerprint.toString('hex'),
+		key: module.exports.buffToJSONObject(publicPEMBuffer, 'utf8')
+	};
+	return cert;
+};
+
+module.exports.verifyCertificateChain = function(cert, rootCert, log){
+	if (cert.id === rootCert.id)
+	{
+		log('is root cert, checking fingerprint');
+		return module.exports.createPublicKeyPEMFingerprintBuffer(module.exports.jSONObjectToBuffer(cert.key)).toString('hex') === rootCert.id;
+	}
+	else
+	{
+		var verified = module.exports.verifyObjectIsSigned(cert, log.wrap('verify cert is signed'));
+		if(verified === true)
+		{
+			if(!cert.signature.signer)
+			{
+				log('top certificate is not the rootCert');
+				return false;
+			}
+			log('certificate signature check ok, checking further up chain');
+			return module.exports.verifyCertificateChain(cert.signature.signer, rootCert, log);
+		}
+		else
+		{
+			log('certificate signature check failed');
+			return false;
+		}
+	}
 };
 

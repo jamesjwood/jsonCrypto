@@ -6,6 +6,8 @@ var jsonCrypto = require('./index.js');
 var utils = require('utils');
 var log = utils.log().wrap('tool');
 
+var fs = require('fs');
+
 //Generate root server pair
 
 //Generate security Service server pair
@@ -36,9 +38,13 @@ var securityServiceCert = {
 var signedSecurityServiceCert = jsonCrypto.signObject(securityServiceCert, rootPair.privatePEM, rootPair.publicPEM, log.wrap('signing'));
 
 
-log(rootPair.privatePEM.toString());
-log.dir(securityServiceCert);
+fs.writeFileSync('./stage/rootPrivate.pem', rootPair.privatePEM.toString());
+fs.writeFileSync('./stage/rootPublic.pem', rootPair.publicPEM.toString());
+fs.writeFileSync('./stage/rootPublic.json', JSON.stringify(securityServiceCert));
 
-log(securityServicePair.privatePEM.toString());
-log.dir(signedSecurityServiceCert);
+
+fs.writeFileSync('./stage/securityPrivate.pem', securityServicePair.privatePEM.toString());
+fs.writeFileSync('./stage/securityPublic.pem', securityServicePair.publicPEM.toString());
+fs.writeFileSync('./stage/securityPublic.json', JSON.stringify(signedSecurityServiceCert));
+
 
