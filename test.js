@@ -17,7 +17,7 @@ var lib = require('./index.js');
 
 
 var EXPONENT = 65537;
-var MODULUS = 2048;
+var MODULUS = 512;
 
 //seems to fix browserify buffers
 var Buff = require('buffer').Buffer;
@@ -109,12 +109,12 @@ describe('pouchManager', function () {
         log('signing object');
 
         var cert = lib.createCert('myCert', publicPEMBuffer);
-        var signed = lib.signObject(myObject, privatePEMString, cert, log.wrap('sign'));
+        var signed = lib.signObject(myObject, privatePEMString, cert, true, log.wrap('sign'));
 
         var sig = "Q4U3Q8B0qHW1J304lEGVFDph6E8QvOlrAvr552eSQGSBvL6YybpdSEUn9XjqhGiF5LgrIRMAzDz+rZ3lZIYzc5QujJfMWBg0kHh47tJ8lNn+KNvk0CDIt2+AW1CvTPZCoDz7K1hnB9gtIFx6h7RkAZNo+1QXwX2mASnwVI9sORmYi0vhfddezlRlz/aVGvBNQcrKNlQWPdef5/qbyNyjU+tDs3UhpnWnKW9zbFSxdl+C33UNbz2qt4jE9wY02wPQofJ4KPCv4eHVPVcLgMURMNwc6IjUNPzhAXjuaD6Sy54Ns5NOpg57FyiBHSOwla7htZ8h64lZ/q8jvVIOHWrODg==";
         log(sig);
         log(signed.signature.signed);
-        assert.equal(sig, signed.signature.signed);
+        assert.equal(sig, signed.signature.signed.value);
     });
 
 
@@ -123,10 +123,10 @@ describe('pouchManager', function () {
         var myObject = {message: 'hello'};
 
         var cert = lib.createCert('myCert', publicPEMBuffer);
-        var signedCert = lib.signObject(cert, rootPrivatePEMBuffer, rootCert, log.wrap('siging cert with rootCert'));
+        var signedCert = lib.signObject(cert, rootPrivatePEMBuffer, rootCert, true, log.wrap('siging cert with rootCert'));
 
 
-        var signed = lib.signObject(myObject, privatePEMBuffer, signedCert, log.wrap('signing'));
+        var signed = lib.signObject(myObject, privatePEMBuffer, signedCert, true, log.wrap('signing'));
 
 
         //var b = new Buff(JSON.stringify(myObject), 'utf8');
@@ -136,7 +136,7 @@ describe('pouchManager', function () {
         //    throw new Error('could not verify');
         //}
         //log('verified ok with openSSL');
-        var verified = lib.verifyObject(signed, rootCert, log.wrap('verifying'));
+        var verified = lib.verifyObject(signed, [rootCert], log.wrap('verifying'));
         assert.equal(true, verified, 'should return true');
         done();
     });
@@ -146,12 +146,12 @@ describe('pouchManager', function () {
         var myObject = {message: 'hello', _id: 'myid'};
         log('signing object');
         var cert = lib.createCert('myCert', publicPEMBuffer);
-        var signed = lib.signObject(myObject, privatePEMBuffer, cert, log.wrap('sign'));
+        var signed = lib.signObject(myObject, privatePEMBuffer, cert, true, log.wrap('sign'));
 
         var sig = "Q4U3Q8B0qHW1J304lEGVFDph6E8QvOlrAvr552eSQGSBvL6YybpdSEUn9XjqhGiF5LgrIRMAzDz+rZ3lZIYzc5QujJfMWBg0kHh47tJ8lNn+KNvk0CDIt2+AW1CvTPZCoDz7K1hnB9gtIFx6h7RkAZNo+1QXwX2mASnwVI9sORmYi0vhfddezlRlz/aVGvBNQcrKNlQWPdef5/qbyNyjU+tDs3UhpnWnKW9zbFSxdl+C33UNbz2qt4jE9wY02wPQofJ4KPCv4eHVPVcLgMURMNwc6IjUNPzhAXjuaD6Sy54Ns5NOpg57FyiBHSOwla7htZ8h64lZ/q8jvVIOHWrODg==";
         log(sig);
         log(signed.signature.signed);
-        assert.equal(sig, signed.signature.signed);
+        assert.equal(sig, signed.signature.signed.value);
     });
 
 
@@ -219,11 +219,27 @@ describe('pouchManager', function () {
         log('signing object');
 
         var cert = lib.createCert('myCert', publicPEMBuffer);
-        var signedCert = lib.signObject(cert, rootPrivatePEMBuffer, rootCert, log.wrap('siging cert with rootCert'));
+        var signedCert = lib.signObject(cert, rootPrivatePEMBuffer, rootCert,  true,log.wrap('siging cert with rootCert'));
 
 
-        var signed = lib.signObject(myObject, privatePEMBuffer, signedCert, log.wrap('signing'));
-        var verified = lib.verifyObject(signed, rootCert, log.wrap('verifying'));
+        var signed = lib.signObject(myObject, privatePEMBuffer, signedCert,  true, log.wrap('signing'));
+        var verified = lib.verifyObject(signed, [rootCert], log.wrap('verifying'));
+        assert.equal(true, verified, 'should return true');
+        done();
+    });
+
+    it('11: should be able to sign and verify with includeCerts=false', function (done) {
+        var log = masterLog.wrap('10');
+        var myObject = {message: 'hello'};
+        var pair = lib.generateKeyPEMBufferPair(MODULUS, EXPONENT);
+        log('signing object');
+
+        var cert = lib.createCert('myCert', publicPEMBuffer);
+        var signedCert = lib.signObject(cert, rootPrivatePEMBuffer, rootCert, false,log.wrap('siging cert with rootCert'));
+
+
+        var signed = lib.signObject(myObject, privatePEMBuffer, signedCert, false, log.wrap('signing'));
+        var verified = lib.verifyObject(signed, [signedCert], log.wrap('verifying'));
         assert.equal(true, verified, 'should return true');
         done();
     });

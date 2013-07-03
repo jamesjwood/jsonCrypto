@@ -43,6 +43,7 @@ if(typeof window !== 'undefined')
 	require('./node_modules/node-forge/js/rsa.js');
 	require('./node_modules/node-forge/js/pki.js');
 	require('./node_modules/node-forge/js/aes.js');
+	require('./node_modules/node-forge/js/pkcs1.js');
 }
 
 
@@ -137,7 +138,7 @@ module.exports.createPublicKeyPEMFingerprintBuffer = function(publicKeyPEMBuff)
 };
 
 
-module.exports.createSignature = function(object, privateKeyPEMBuffer, publicCert, log){
+module.exports.createSignature = function(object, privateKeyPEMBuffer, publicCert, includeSigner, log){
 	var objectString = stringify(object);
 	var objectBuff = new Buff(objectString);
 
@@ -150,20 +151,46 @@ module.exports.createSignature = function(object, privateKeyPEMBuffer, publicCer
 	log('creating signature');
 
 	var that = {
-		digest: hashBuf.toString(DEFAULT_ENCODING),
-		date: new Date(),
-		digestEncoding: DEFAULT_ENCODING,
+		signed: module.exports.buffToJSONObject(sigBuf, DEFAULT_ENCODING),
+		digest: module.exports.buffToJSONObject(hashBuf, DEFAULT_ENCODING),
 		digestMethod: DEFAULT_HASH_METHOD,
-		signed: sigBuf.toString(DEFAULT_ENCODING),
-		signedEncoding: DEFAULT_ENCODING,
-		signer: publicCert
+		date: new Date(),
 	};
+
+	if(includeSigner)
+	{
+		that.signer= publicCert;
+	}
+	else
+	{
+		that.signer= module.exports.createPublicKeyPEMFingerprintBuffer(module.exports.jSONObjectToBuffer(publicCert.key)).toString('hex');
+	}
 	return that;
 };
+module.exports.getTrustedCert = function(certOrFingerprint, trustedCerts){
+	var foundCert;
+	trustedCerts.map(function(trustedCert){
+		if((typeof certOrFingerprint === 'object' && trustedCert.id === certOrFingerprint.id) || (typeof certOrFingerprint === 'string' && trustedCert.id === certOrFingerprint))
+		{
+			foundCert = trustedCert;
+		}
+	});
+	return foundCert;
+};
 
-module.exports.verifySignature = function(signature, object, log){
+module.exports.verifySignature = function(signature, object, trustedCerts, log){
+	assert.ok(signature.signer, 'signature must have a signer');
+	var publicCert = module.exports.getTrustedCert(signature.signer, trustedCerts);
+	if(!publicCert && typeof signature.signer === 'object')
+	{
+		publicCert = signature.signer;
+	}
+	if(!publicCert)
+	{
+		throw new Error('no trusted certificate fount with fingerprint: ' + fingerprint);
+	}
 
-	var publicCert = signature.signer;
+
 	var publicKeyPEMBuffer = module.exports.jSONObjectToBuffer(publicCert.key);
 	var publicKey = pki.publicKeyFromPem(publicKeyPEMBuffer.toString('utf8'));
 
@@ -171,40 +198,55 @@ module.exports.verifySignature = function(signature, object, log){
 	var objectBuff = new Buff(objectString);
 
 	var hashBuf = module.exports.hashBuffer(objectBuff, signature.digestMethod);
+	var existingHashBuf = module.exports.jSONObjectToBuffer(signature.digest);
 
-	if(hashBuf.toString(signature.digestEncoding) !== signature.digest){
+	if(hashBuf.toString(DEFAULT_ENCODING) !==  existingHashBuf.toString(DEFAULT_ENCODING)){
 		log('hash not ok');
 		return false;
 	}
 
 	log('hash ok, checking signature');
 
-	var signatureBuff = new Buff(signature.signed, signature.signedEncoding);
+	var signatureBuff = module.exports.jSONObjectToBuffer(signature.signed);
 
 	var verified = module.exports.hashAndVerifyBuffer(hashBuf, publicKeyPEMBuffer, signatureBuff);
 	return verified;
 };
 
-module.exports.signObject = function(object, privateKeyPEMBuffer, publicCert, log){
-	var copy = createSignableObject(object);
-
-	object.signature = module.exports.createSignature(copy, privateKeyPEMBuffer, publicCert, log);
-	return object;
+module.exports.signObject = function(object, privateKeyPEMBuffer, publicCert, includeSigner, log){
+	var signable = createSignableObject(object);
+	var copy = copyObject(object);
+	copy.signature = module.exports.createSignature(signable, privateKeyPEMBuffer, publicCert, includeSigner, log);
+	return copy;
 };
 
-module.exports.verifyObjectIsSigned = function(object, log){
+module.exports.verifyObjectIsSigned = function(object, trustedCerts, log){
+	assert.ok(object.signature, 'must have a signature');
+	assert.ok(object.signature.signed, 'a signature must have signature data:' + JSON.stringify(object));
+	assert.ok(object.signature.signer, 'a signature must have the signing cert as signer');
 	var signature = object.signature;
 	var copy = createSignableObject(object);
 
-	var verified = module.exports.verifySignature(signature, copy, log);
+	var verified = module.exports.verifySignature(signature, copy, trustedCerts, log);
 	return verified;
 };
 
-module.exports.verifyObject = function(object, rootCert, log){
-	var verifiedSignature = module.exports.verifyObjectIsSigned(object, log.wrap('verifyObjectIsSigned'));
+module.exports.verifyObject = function(object, trustedCerts, log){
+	assert.ok(object);
+	assert.ok(trustedCerts);
+	var verifiedSignature = module.exports.verifyObjectIsSigned(object, trustedCerts, log.wrap('verifyObjectIsSigned'));
 	if(verifiedSignature)
 	{
-		return module.exports.verifyCertificateChain(object.signature.signer, rootCert, log.wrap('verifyCertificateChain'));
+		if(module.exports.getTrustedCert(object.signature.signer, trustedCerts))
+		{
+			//signed with a trusted certificate
+			return true;
+		}
+		else
+		{
+			//signed but certificate is not trusted, look further up the chain
+			return module.exports.verifyObject(object.signature.signer, trustedCerts, log.wrap('verifyObject'));
+		}
 	}
 	else
 	{
@@ -372,15 +414,22 @@ module.exports.createCert = function(name, publicPEMBuffer){
 	return cert;
 };
 
-module.exports.verifyCertificateChain = function(cert, rootCert, log){
-	if (cert.id === rootCert.id)
+module.exports.verifyCertificateChain = function(cert, trustedCerts, log){
+	var isTrustedCert = false;
+	trustedCerts.map(function(trustedCert){
+		if(cert.name === trustedCert.name && cert.id === trustedCert.id && module.exports.jSONObjectToBuffer(cert.key).toString(DEFAULT_ENCODING) === module.exports.jSONObjectToBuffer(trustedCert.key).toString(DEFAULT_ENCODING))
+		{
+			isTrustedCert = true;
+		}
+	});
+
+	if (isTrustedCert)
 	{
-		log('is root cert, checking fingerprint');
-		return module.exports.createPublicKeyPEMFingerprintBuffer(module.exports.jSONObjectToBuffer(cert.key)).toString('hex') === rootCert.id;
+		return true;
 	}
 	else
 	{
-		var verified = module.exports.verifyObjectIsSigned(cert, log.wrap('verify cert is signed'));
+		var verified = module.exports.verifyObjectIsSigned(cert, trustedCerts, log.wrap('verify cert is signed'));
 		if(verified === true)
 		{
 			if(!cert.signature.signer)
@@ -389,7 +438,7 @@ module.exports.verifyCertificateChain = function(cert, rootCert, log){
 				return false;
 			}
 			log('certificate signature check ok, checking further up chain');
-			return module.exports.verifyCertificateChain(cert.signature.signer, rootCert, log);
+			return module.exports.verifyCertificateChain(cert.signature.signer, trustedCerts, log);
 		}
 		else
 		{
@@ -397,5 +446,6 @@ module.exports.verifyCertificateChain = function(cert, rootCert, log){
 			return false;
 		}
 	}
+	
 };
 
