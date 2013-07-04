@@ -221,7 +221,10 @@ module.exports.signObject = function(object, privateKeyPEMBuffer, publicCert, in
 };
 
 module.exports.verifyObjectIsSigned = function(object, trustedCerts, log){
-	assert.ok(object.signature, 'must have a signature');
+	if(!object.signature)
+	{
+		return false;
+	}
 	assert.ok(object.signature.signed, 'a signature must have signature data:' + JSON.stringify(object));
 	assert.ok(object.signature.signer, 'a signature must have the signing cert as signer');
 	var signature = object.signature;
@@ -231,28 +234,44 @@ module.exports.verifyObjectIsSigned = function(object, trustedCerts, log){
 	return verified;
 };
 
+
 module.exports.verifyObject = function(object, trustedCerts, log){
 	assert.ok(object);
 	assert.ok(trustedCerts);
 	var verifiedSignature = module.exports.verifyObjectIsSigned(object, trustedCerts, log.wrap('verifyObjectIsSigned'));
 	if(verifiedSignature)
 	{
-		if(module.exports.getTrustedCert(object.signature.signer, trustedCerts))
+		var signedBy = object.signature.signer;
+		if(module.exports.getTrustedCert(signedBy, trustedCerts))
 		{
 			//signed with a trusted certificate
-			return true;
+			return module.exports.verifyObject.SIGNATURE_VALID_AND_TRUSTED;
 		}
 		else
 		{
 			//signed but certificate is not trusted, look further up the chain
-			return module.exports.verifyObject(object.signature.signer, trustedCerts, log.wrap('verifyObject'));
+			if(signedBy.signature)
+			{
+				//If the signer is signed then check it
+				return module.exports.verifyObject(object.signature.signer, trustedCerts, log.wrap('verifyObject'));
+			}
+			else
+			{
+				//If not then this is signed but not trusted
+				return module.exports.verifyObject.SIGNATURE_VALID_NOT_TRUSTED;
+			}
 		}
 	}
 	else
 	{
-		return false;
+		return module.exports.verifyObject.SIGNATURE_INVALID;
 	}
 };
+
+module.exports.verifyObject.SIGNATURE_INVALID = 0;
+module.exports.verifyObject.SIGNATURE_VALID_AND_TRUSTED = 1;
+module.exports.verifyObject.SIGNATURE_VALID_NOT_TRUSTED = 2;
+
 
 module.exports.encrypt = function(object, fieldsToBeEncrypted, rsaKeys, log){
 	var copy = copyObject(object);
@@ -414,38 +433,6 @@ module.exports.createCert = function(name, publicPEMBuffer){
 	return cert;
 };
 
-module.exports.verifyCertificateChain = function(cert, trustedCerts, log){
-	var isTrustedCert = false;
-	trustedCerts.map(function(trustedCert){
-		if(cert.name === trustedCert.name && cert.id === trustedCert.id && module.exports.jSONObjectToBuffer(cert.key).toString(DEFAULT_ENCODING) === module.exports.jSONObjectToBuffer(trustedCert.key).toString(DEFAULT_ENCODING))
-		{
-			isTrustedCert = true;
-		}
-	});
 
-	if (isTrustedCert)
-	{
-		return true;
-	}
-	else
-	{
-		var verified = module.exports.verifyObjectIsSigned(cert, trustedCerts, log.wrap('verify cert is signed'));
-		if(verified === true)
-		{
-			if(!cert.signature.signer)
-			{
-				log('top certificate is not the rootCert');
-				return false;
-			}
-			log('certificate signature check ok, checking further up chain');
-			return module.exports.verifyCertificateChain(cert.signature.signer, trustedCerts, log);
-		}
-		else
-		{
-			log('certificate signature check failed');
-			return false;
-		}
-	}
-	
-};
+
 

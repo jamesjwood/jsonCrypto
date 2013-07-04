@@ -137,7 +137,7 @@ describe('pouchManager', function () {
         //}
         //log('verified ok with openSSL');
         var verified = lib.verifyObject(signed, [rootCert], log.wrap('verifying'));
-        assert.equal(true, verified, 'should return true');
+        assert.equal(lib.verifyObject.SIGNATURE_VALID_AND_TRUSTED, verified);
         done();
     });
 
@@ -224,12 +224,12 @@ describe('pouchManager', function () {
 
         var signed = lib.signObject(myObject, privatePEMBuffer, signedCert,  true, log.wrap('signing'));
         var verified = lib.verifyObject(signed, [rootCert], log.wrap('verifying'));
-        assert.equal(true, verified, 'should return true');
+        assert.equal(lib.verifyObject.SIGNATURE_VALID_AND_TRUSTED, verified, 'should return true');
         done();
     });
 
     it('11: should be able to sign and verify with includeCerts=false', function (done) {
-        var log = masterLog.wrap('10');
+        var log = masterLog.wrap('11');
         var myObject = {message: 'hello'};
         var pair = lib.generateKeyPEMBufferPair(MODULUS, EXPONENT);
         log('signing object');
@@ -240,7 +240,21 @@ describe('pouchManager', function () {
 
         var signed = lib.signObject(myObject, privatePEMBuffer, signedCert, false, log.wrap('signing'));
         var verified = lib.verifyObject(signed, [signedCert], log.wrap('verifying'));
-        assert.equal(true, verified, 'should return true');
+        assert.equal(lib.verifyObject.SIGNATURE_VALID_AND_TRUSTED, verified, 'should return true');
+        done();
+    });
+    it('12: should verify untrusted but signed objects', function (done) {
+        var log = masterLog.wrap('12');
+        var myObject = {message: 'hello'};
+        var pair = lib.generateKeyPEMBufferPair(MODULUS, EXPONENT);
+        log('signing object');
+
+        var cert = lib.createCert('myCert', publicPEMBuffer);
+
+
+        var signed = lib.signObject(myObject, privatePEMBuffer, cert, true, log.wrap('signing'));
+        var verified = lib.verifyObject(signed, [rootCert], log.wrap('verifying'));
+        assert.equal(lib.verifyObject.SIGNATURE_VALID_NOT_TRUSTED, verified);
         done();
     });
 });
