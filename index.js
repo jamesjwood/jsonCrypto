@@ -352,13 +352,35 @@ module.exports.jSONObjectToBuffer = function(object){
 	return B;
 };
 
+module.exports.getRandomBuffer = function(bytes){
+	var randomBytes = Forge.random.getBytesSync(16);
+	var randomBuffer = new Buff(Forge.util.bytesToHex(randomBytes), 'hex');
+	return randomBuffer;
+};
+
+module.exports.encryptRSA = function(secretBuffer, publicKeyBuffer, log)
+{
+	var publicKey = pki.publicKeyFromPem(publicKeyBuffer.toString('utf8'));
+	var secretBytes = Forge.util.hexToBytes(secretBuffer.toString('hex'));
+
+	var encodedKeyBytes = publicKey.encrypt(secretBytes);
+	var encodedKeyBuffer =  new Buff(Forge.util.bytesToHex(encodedKeyBytes), 'hex');
+	return encodedKeyBuffer;
+};
+
+module.exports.decryptRSA = function(encryptedBuffer, privateKeyBuffer, log){
+	var privateKey = pki.privateKeyFromPem(privateKeyBuffer.toString('utf8'));
+	var encryptedBytes = Forge.util.hexToBytes(encryptedBuffer.toString('hex'));
+	var decryptedBytes = privateKey.decrypt(encryptedBytes);
+	var decryptedBuffer = new Buff(Forge.util.bytesToHex(decryptedBytes), 'hex');
+	return decryptedBuffer;
+};
+
 module.exports.encryptJSON  = function(jsonBuff, rsaKeys, log){
-	var ivBytes = Forge.random.getBytesSync(16);
-	var ivBuff = new Buff(Forge.util.bytesToHex(ivBytes), 'hex');
-
-	var aesKeyBytes = Forge.random.getBytesSync(16);
-
-	var aesKeyBuffer = new Buff(Forge.util.bytesToHex(aesKeyBytes), 'hex');
+	var ivBuff = module.exports.getRandomBuffer(16);
+	var ivBytes = Forge.util.hexToBytes(ivBuff.toString('hex'));
+	var aesKeyBuffer = module.exports.getRandomBuffer(16);
+	var aesKeyBytes = Forge.util.hexToBytes(aesKeyBuffer.toString('hex'));
 
 	var cipher = Forge.aes.createEncryptionCipher(aesKeyBytes);
 	cipher.start(ivBytes);
@@ -378,9 +400,7 @@ module.exports.encryptJSON  = function(jsonBuff, rsaKeys, log){
 	for(var fingerprint in rsaKeys)
 	{
 		var publicKeyPEMBuffer  = module.exports.jSONObjectToBuffer(rsaKeys[fingerprint]);
-		var publicKey = pki.publicKeyFromPem(publicKeyPEMBuffer.toString('utf8'));
-		var encodedKeyBytes = publicKey.encrypt(aesKeyBytes);
-		var encodedKeyBuffer =  new Buff(Forge.util.bytesToHex(encodedKeyBytes), 'hex');
+		var encodedKeyBuffer = module.exports.encryptRSA(aesKeyBuffer, publicKeyPEMBuffer, log);
 		encrypted.keys[fingerprint] = module.exports.buffToJSONObject(encodedKeyBuffer);
 	}
 
@@ -399,10 +419,10 @@ module.exports.decryptJSON = function(encrypted, fingerprintHex, privateKeyPEMBu
 
 	var encryptedAESKey = encrypted.keys[fingerprintHex];
 	assert.ok(encryptedAESKey);
+
 	var encryptedAESKeyBuffer = module.exports.jSONObjectToBuffer(encryptedAESKey);
-	var encryptedAESKeyBytes = Forge.util.hexToBytes(encryptedAESKeyBuffer.toString('hex'));
-	var decryptedAESKeyBytes = privateKey.decrypt(encryptedAESKeyBytes);
-	var decryptedAESKeyBuffer = new Buff(Forge.util.bytesToHex(decryptedAESKeyBytes), 'hex');
+	var decryptedAESKeyBuffer = module.exports.decryptRSA(encryptedAESKeyBuffer, privateKeyPEMBuff, log.wrap('decrypting aes key'));
+	var decryptedAESKeyBytes = Forge.util.hexToBytes(decryptedAESKeyBuffer.toString('hex'));
 
 
 	var encryptedDataBuffer = module.exports.jSONObjectToBuffer(encrypted.data);
