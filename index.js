@@ -236,35 +236,43 @@ module.exports.verifyObjectIsSigned = function(object, trustedCerts, log){
 
 
 module.exports.verifyObject = function(object, trustedCerts, log){
-	assert.ok(object);
-	assert.ok(trustedCerts);
-	var verifiedSignature = module.exports.verifyObjectIsSigned(object, trustedCerts, log.wrap('verifyObjectIsSigned'));
-	if(verifiedSignature)
+	try
 	{
-		var signedBy = object.signature.signer;
-		if(module.exports.getTrustedCert(signedBy, trustedCerts))
+		assert.ok(object);
+		assert.ok(trustedCerts);
+		var verifiedSignature = module.exports.verifyObjectIsSigned(object, trustedCerts, log.wrap('verifyObjectIsSigned'));
+		if(verifiedSignature)
 		{
-			//signed with a trusted certificate
-			return module.exports.verifyObject.SIGNATURE_VALID_AND_TRUSTED;
-		}
-		else
-		{
-			//signed but certificate is not trusted, look further up the chain
-			if(signedBy.signature)
+			var signedBy = object.signature.signer;
+			if(module.exports.getTrustedCert(signedBy, trustedCerts))
 			{
-				//If the signer is signed then check it
-				return module.exports.verifyObject(object.signature.signer, trustedCerts, log.wrap('verifyObject'));
+				//signed with a trusted certificate
+				return module.exports.verifyObject.SIGNATURE_VALID_AND_TRUSTED;
 			}
 			else
 			{
-				//If not then this is signed but not trusted
-				return module.exports.verifyObject.SIGNATURE_VALID_NOT_TRUSTED;
+				//signed but certificate is not trusted, look further up the chain
+				if(signedBy.signature)
+				{
+					//If the signer is signed then check it
+					return module.exports.verifyObject(object.signature.signer, trustedCerts, log.wrap('verifyObject'));
+				}
+				else
+				{
+					//If not then this is signed but not trusted
+					return module.exports.verifyObject.SIGNATURE_VALID_NOT_TRUSTED;
+				}
 			}
 		}
+		else
+		{
+			return module.exports.verifyObject.SIGNATURE_INVALID;
+		}
 	}
-	else
+	catch (e)
 	{
-		return module.exports.verifyObject.SIGNATURE_INVALID;
+		e.message = 'Error in jsonCrypto.verifyObject(): ' + e.message;
+		throw e
 	}
 };
 
