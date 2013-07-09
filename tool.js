@@ -14,37 +14,25 @@ var fs = require('fs');
 var rootPair = jsonCrypto.generateKeyPEMBufferPair(MODULUS, EXPONENT);
 var rootFingerprint = jsonCrypto.createPublicKeyPEMFingerprintBuffer(rootPair.publicPEM);
 
-var rootCert = {
-	name: 'collaborlist.com',
-	id: rootFingerprint.toString('hex'),
-	key: {
-		data: rootPair.publicPEM.toString('utf8'),
-		encoding: 'utf8'
-	}
-};
+
+
+var rootCert = jsonCrypto.createCert('root', rootPair.publicPEM);
+
+var signedRootCert = jsonCrypto.signObject(rootCert, rootPair.privatePEM, rootCert, false, log.wrap('signing root'));
 
 var securityServicePair = jsonCrypto.generateKeyPEMBufferPair(MODULUS, EXPONENT);
 var securityServiceFingerprint = jsonCrypto.createPublicKeyPEMFingerprintBuffer(securityServicePair.publicPEM);
 
-var securityServiceCert = {
-	name: 'securityService.collaborlist.com',
-	id: securityServiceFingerprint.toString('hex'),
-	key: {
-		data: securityServicePair.publicPEM.toString('utf8'),
-		encoding: 'utf8'
-	}
-};
+var securityServiceCert = jsonCrypto.createCert('securityService', securityServicePair.publicPEM);
 
-var signedSecurityServiceCert = jsonCrypto.signObject(securityServiceCert, rootPair.privatePEM, rootPair.publicPEM, log.wrap('signing'));
+var signedSecurityServiceCert = jsonCrypto.signObject(securityServiceCert, rootPair.privatePEM, signedRootCert, false, log.wrap('signing security'));
 
 
-fs.writeFileSync('./stage/rootPrivate.pem', rootPair.privatePEM.toString());
-fs.writeFileSync('./stage/rootPublic.pem', rootPair.publicPEM.toString());
-fs.writeFileSync('./stage/rootPublic.json', JSON.stringify(securityServiceCert));
+fs.writeFileSync('./stage/rootPrivate.encodedpem', JSON.stringify(jsonCrypto.buffToJSONObject(rootPair.privatePEM, 'base64')));
+fs.writeFileSync('./stage/rootPublic.encodedcert', JSON.stringify(signedRootCert));
 
 
-fs.writeFileSync('./stage/securityPrivate.pem', securityServicePair.privatePEM.toString());
-fs.writeFileSync('./stage/securityPublic.pem', securityServicePair.publicPEM.toString());
-fs.writeFileSync('./stage/securityPublic.json', JSON.stringify(signedSecurityServiceCert));
+fs.writeFileSync('./stage/securityPrivate.encodedpem', JSON.stringify(jsonCrypto.buffToJSONObject(securityServicePair.privatePEM, 'base64')));
+fs.writeFileSync('./stage/securityPublic.encodedcert', JSON.stringify(signedSecurityServiceCert));
 
 

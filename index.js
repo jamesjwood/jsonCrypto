@@ -272,7 +272,7 @@ module.exports.verifyObject = function(object, trustedCerts, log){
 	catch (e)
 	{
 		e.message = 'Error in jsonCrypto.verifyObject(): ' + e.message;
-		throw e
+		throw e;
 	}
 };
 
