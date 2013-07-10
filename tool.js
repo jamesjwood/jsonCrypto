@@ -28,11 +28,11 @@ var securityServiceCert = jsonCrypto.createCert('securityService', securityServi
 var signedSecurityServiceCert = jsonCrypto.signObject(securityServiceCert, rootPair.privatePEM, signedRootCert, false, log.wrap('signing security'));
 
 
-fs.writeFileSync('./stage/rootPrivate.encodedpem', JSON.stringify(jsonCrypto.buffToJSONObject(rootPair.privatePEM, 'base64')));
-fs.writeFileSync('./stage/rootPublic.encodedcert', JSON.stringify(signedRootCert));
+fs.writeFileSync('./stage/rootPrivate.encodedpem', rootPair.privatePEM.toString('hex'));
+fs.writeFileSync('./stage/rootPublic.encodedcert', new Buffer(JSON.stringify(signedRootCert)).toString('hex'));
 
 
-fs.writeFileSync('./stage/securityPrivate.encodedpem', JSON.stringify(jsonCrypto.buffToJSONObject(securityServicePair.privatePEM, 'base64')));
-fs.writeFileSync('./stage/securityPublic.encodedcert', JSON.stringify(signedSecurityServiceCert));
+fs.writeFileSync('./stage/securityPrivate.encodedpem', securityServicePair.privatePEM.toString('hex'));
+fs.writeFileSync('./stage/securityPublic.encodedcert', new Buffer(JSON.stringify(signedSecurityServiceCert)).toString('hex'));
 
 

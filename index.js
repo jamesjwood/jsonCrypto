@@ -101,11 +101,9 @@ module.exports.hashAndSignBuffer = function(dataBuffer, privateKeyPEMBuffer, log
 
 
 	log('reading private key');
-	log(privateKeyPEMBuffer.toString('utf8'));
 	var privateKey = pki.privateKeyFromPem(privateKeyPEMBuffer.toString('utf8'));
 
 	var hashDigest = hashBufferToDigest(dataBuffer, DEFAULT_HASH_METHOD);
-	log.dir(hashDigest);
 	var hashBuffer = hashDigestToBuffer(hashDigest);
 
 	log('getting hash bytes');
@@ -146,7 +144,6 @@ module.exports.createSignature = function(object, privateKeyPEMBuffer, publicCer
 	var hashBuf = module.exports.hashBuffer(objectBuff, DEFAULT_HASH_METHOD);
 	log('signing');
 	var sigBuf = module.exports.hashAndSignBuffer(objectBuff, privateKeyPEMBuffer, log.wrap('sign buffer'));
-	log('reading public key');
 
 	log('creating signature');
 
