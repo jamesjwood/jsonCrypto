@@ -113,7 +113,7 @@ grunt.loadNpmTasks('grunt-simple-mocha');
 
 grunt.loadNpmTasks('grunt-karma');
 
-grunt.registerTask('install', 'shell:makeLib');
+grunt.registerTask('install', 'shell:makeLib', 'bundleForge');
 grunt.registerTask('test', ['jshint', 'simplemocha', 'shell:makeStage','shell:browserify', 'karma']);
 grunt.registerTask('default', ['test']);
 

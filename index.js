@@ -14,41 +14,8 @@ var DEFAULT_ENCODING = 'base64';
 var DEFAULT_HASH_METHOD = 'sha256';
 
 //probably a better way to do this but the below works for browserify
-if(typeof window !== 'undefined')
-{
-	require('./node_modules/node-forge/js/pkcs7asn1.js');
-	require('./node_modules/node-forge/js/mgf.js');
-	require('./node_modules/node-forge/js/mgf1.js');
-	require('./node_modules/node-forge/js/md.js');
-	require('./node_modules/node-forge/js/tls.js');
-	require('./node_modules/node-forge/js/task.js');
-	require('./node_modules/node-forge/js/rc2.js');
-	require('./node_modules/node-forge/js/pss.js');
-	require('./node_modules/node-forge/js/pkcs7.js');
-	require('./node_modules/node-forge/js/pkcs12.js');
-	require('./node_modules/node-forge/js/pbkdf2.js');
-	require('./node_modules/node-forge/js/log.js');
-	require('./node_modules/node-forge/js/aesCipherSuites.js');
-	require('./node_modules/node-forge/js/des.js');
-	require('./node_modules/node-forge/js/debug.js');
-	require('./node_modules/node-forge/js/util.js');
-	require('./node_modules/node-forge/js/md5.js');
-	require('./node_modules/node-forge/js/sha1.js');
-	require('./node_modules/node-forge/js/sha256.js');
-	require('./node_modules/node-forge/js/prng.js');
-	require('./node_modules/node-forge/js/random.js');
-	require('./node_modules/node-forge/js/hmac.js');
-	require('./node_modules/node-forge/js/jsbn.js');
-	require('./node_modules/node-forge/js/oids.js');
-	require('./node_modules/node-forge/js/asn1.js');
-	require('./node_modules/node-forge/js/pki.js');
-	require('./node_modules/node-forge/js/rsa.js');
-	require('./node_modules/node-forge/js/aes.js');
-	require('./node_modules/node-forge/js/pkcs1.js');
-}
-
-
-if(typeof forge === 'undefined')
+var Forge;
+if(typeof window === 'undefined')
 {
 	Forge = require('node-forge');
 }
