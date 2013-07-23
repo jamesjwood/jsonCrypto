@@ -23,6 +23,15 @@ module.exports = function(grunt) {
       },
       all: { src: ['test.js'] }
     },
+    browserify: {
+      tests:{
+        dest: './stage/test.js',
+        src: ['./node_modules/node-forge/js/rsa.js','./test.js'],
+        options: {
+            ignore: ['node-forge']
+        }
+      }
+    },
     shell: {
       makeStage: {
         command: 'rm -rf stage; mkdir stage',
@@ -38,7 +47,7 @@ module.exports = function(grunt) {
       }
       ,
       browserify:{
-        command: 'browserify  -o ./stage/test.js -i domain -e ./test.js;',
+        command: 'node ./node_modules/browserify/bin/cmd.js  -o ./stage/test.js -i domain -e ./test.js;',
         stdout: true,
         stderr: true,
         failOnError: true
@@ -101,6 +110,7 @@ grunt.registerTask('bundleForge', function(){
 grunt.loadNpmTasks('grunt-contrib');
 grunt.loadNpmTasks('grunt-shell');
 grunt.loadNpmTasks('grunt-simple-mocha');
+grunt.loadNpmTasks('grunt-browserify');
 
 grunt.loadNpmTasks('grunt-karma');
 

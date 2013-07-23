@@ -8,16 +8,14 @@ basePath = 'stage/';
 
 // list of files / patterns to load in the browser
 files = [
-  MOCHA,
-  MOCHA_ADAPTER,
-'test.js'
+	MOCHA,
+	MOCHA_ADAPTER,
+	'test.js'
 ];
 
 
 // list of files to exclude
-exclude = [
-  
-];
+exclude = [];
 
 
 // test results reporter to use

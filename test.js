@@ -8,9 +8,8 @@
 var assert = require('assert');
 var utils = require('utils');
 var events = require('events');
-var sinon = require('sinon');
 
-var masterLog = utils.log().wrap('pouchTools.crypto');
+var masterLog = utils.log().wrap('jsonCrypto');
 
 var lib = require('./index.js');
 //var crypto = require('crypto');
@@ -54,7 +53,7 @@ console.log(publicPEMBase64);
 
 
 
-describe('pouchManager', function () {
+describe('jsonCrypto', function () {
     'use strict';
     it('1: should be able to gererate a key pair', function (done) {
         var log = masterLog.wrap('1');

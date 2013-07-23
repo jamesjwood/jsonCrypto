@@ -1,9 +1,10 @@
 /*global window */
+/*global forge */
 /*jslint node: true */
 
-var Forge = require('node-forge');
-var rsa = Forge.pki.rsa;
-var pki = Forge.pki;
+
+
+
 var assert = require('assert');
 var stringify = require('canonical-json');
 
@@ -40,12 +41,24 @@ if(typeof window !== 'undefined')
 	require('./node_modules/node-forge/js/jsbn.js');
 	require('./node_modules/node-forge/js/oids.js');
 	require('./node_modules/node-forge/js/asn1.js');
-	require('./node_modules/node-forge/js/rsa.js');
 	require('./node_modules/node-forge/js/pki.js');
+	require('./node_modules/node-forge/js/rsa.js');
 	require('./node_modules/node-forge/js/aes.js');
 	require('./node_modules/node-forge/js/pkcs1.js');
 }
 
+
+if(typeof forge === 'undefined')
+{
+	Forge = require('node-forge');
+}
+else
+{
+	Forge = forge;
+}
+
+var pki = Forge.pki;
+var rsa = pki.rsa;
 
 
 
