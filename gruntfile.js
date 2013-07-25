@@ -106,7 +106,7 @@ grunt.registerTask('bundleForge', function(){
 
   console.log('RSA bundle written to: ' + bundle);
 });
-c
+
 grunt.loadNpmTasks('grunt-contrib');
 grunt.loadNpmTasks('grunt-shell');
 grunt.loadNpmTasks('grunt-simple-mocha');
@@ -116,5 +116,4 @@ grunt.loadNpmTasks('grunt-karma');
 grunt.registerTask('install', 'shell:makeLib', 'bundleForge');
 grunt.registerTask('test', ['jshint', 'simplemocha', 'shell:makeStage','shell:browserify', 'karma']);
 grunt.registerTask('default', ['test']);
-
 };
