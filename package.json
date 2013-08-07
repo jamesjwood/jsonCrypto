@@ -7,18 +7,20 @@
     "install": "grunt install",
     "test": "grunt test"
   },
-  "repository": "",
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jamesjwood/jsonCrypto.git"
+  },
+  "author": "James Wood <james.wood@datatransparency.com>",
   "license": "BSD",
   "devDependencies": {
     "mocha": "1.10.0",
     "grunt": "0.4.1",
-    "karma": "0.8.6",
-    "grunt-karma": "0.4.4",
     "grunt-contrib": "0.7.0",
     "grunt-simple-mocha": "0.4.0",
     "grunt-shell": "0.3.0",
-    "browserify": "1.17.3"
+    "browserify": "1.17.3",
+    "grunt-karma": "0.4.5"
   },
   "dependencies": {
     "node-forge": "0.1.4",
