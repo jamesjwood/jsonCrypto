@@ -363,7 +363,7 @@ module.exports.jSONObjectToBuffer = function(object){
 };
 
 module.exports.getRandomBuffer = function(bytes){
-	var randomBytes = Forge.random.getBytesSync(16);
+	var randomBytes = Forge.random.getBytesSync(bytes);
 	var randomBuffer = new Buff(Forge.util.bytesToHex(randomBytes), 'hex');
 	return randomBuffer;
 };
