@@ -136,7 +136,7 @@ module.exports.hashAndVerifyBuffer = function(hashBuffer, publicKeyPEMBuffer, si
 module.exports.createPublicKeyPEMFingerprintBuffer = function(publicKeyPEMBuff)
 {
 	assert.ok(publicKeyPEMBuff);
-	var fingerBuff = module.exports.hashBuffer(publicKeyPEMBuff,'md5');
+	var fingerBuff = module.exports.hashBuffer(publicKeyPEMBuff,'sha1');
 	return fingerBuff;
 };
 
