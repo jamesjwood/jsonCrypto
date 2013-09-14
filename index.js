@@ -246,6 +246,10 @@ module.exports.verifyObject = function(object, trustedCerts, log){
 		if(verifiedSignature)
 		{
 			var signedBy = object.signature.signer;
+			if(trustedCerts && trustedCerts.length === 1 && trustedCerts[0] === '*')
+			{
+				return module.exports.verifyObject.SIGNATURE_VALID_AND_TRUSTED;
+			}
 			if(module.exports.getTrustedCert(signedBy, trustedCerts))
 			{
 				//signed with a trusted certificate

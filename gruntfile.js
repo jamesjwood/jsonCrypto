@@ -5,7 +5,7 @@ module.exports = function(grunt) {
     watch: {
       options: {
         interrupt: true,
-      files: ['src/*.js', 'test/*.js'],
+      files: ['index.js', 'test.js'],
       tasks: ['test']
       }
     },
@@ -47,7 +47,7 @@ module.exports = function(grunt) {
       }
       ,
       browserify:{
-        command: 'node ./node_modules/browserify/bin/cmd.js  -o ./stage/test.js -i domain -e ./test.js;',
+        command: 'node ./node_modules/browserify/bin/cmd.js  --debug -o ./stage/test.js -i domain -e ./test.js;',
         stdout: true,
         stderr: true,
         failOnError: true
@@ -114,6 +114,6 @@ grunt.loadNpmTasks('grunt-simple-mocha');
 grunt.loadNpmTasks('grunt-karma');
 
 grunt.registerTask('install', 'shell:makeLib', 'bundleForge');
-grunt.registerTask('test', ['jshint', 'simplemocha', 'shell:makeStage','shell:browserify', 'karma']);
-grunt.registerTask('default', ['test']);
+grunt.registerTask('test', ['default', 'shell:makeStage','shell:browserify', 'karma']);
+grunt.registerTask('default', ['jshint', 'simplemocha']);
 };
