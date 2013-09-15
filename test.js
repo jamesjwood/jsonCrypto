@@ -140,9 +140,9 @@ describe('jsonCrypto', function () {
         done();
     });
 
-    it('7: _ properties should not be hashed and signed', function () {
+    it('7: _rev should not be hashed and signed', function () {
         var log = masterLog.wrap('7');
-        var myObject = {message: 'hello', _id: 'myid'};
+        var myObject = {message: 'hello', _rev: 'myid'};
         log('signing object');
         var cert = lib.createCert('myCert', publicPEMBuffer);
         var signed = lib.signObject(myObject, privatePEMBuffer, cert, true, log.wrap('sign'));
@@ -254,6 +254,19 @@ describe('jsonCrypto', function () {
         var signed = lib.signObject(myObject, privatePEMBuffer, cert, true, log.wrap('signing'));
         var verified = lib.verifyObject(signed, [rootCert], log.wrap('verifying'));
         assert.equal(lib.verifyObject.SIGNATURE_VALID_NOT_TRUSTED, verified);
+        done();
+    });
+    it('13: should add and validate proof of work', function (done) {
+        var log = masterLog.wrap('13');
+        var myObject = {message: 'hello'};
+        var before = new Date();
+        var newObject = lib.addProofOfWork(myObject, {precision: 4});
+        var after = new Date();
+        var time = (after - before)/1000;
+        log(time + ' milliseconds to do work');
+        var valid = lib.validateProofOfWork(newObject);
+        log('value was ' + newObject.proofOfWork.value);
+        assert.ok(valid);
         done();
     });
 });

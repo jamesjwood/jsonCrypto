@@ -63,13 +63,7 @@ var copyObject= function(object){
 var createSignableObject = function(object){
 	var copy = copyObject(object);
 	delete copy.signature;
-	for(var name in copy)
-	{
-		if(name.substr(0,1) === "_")
-		{
-			delete copy[name];
-		}
-	}
+	delete copy._rev;
 	return copy;
 };
 var hashBufferToDigest = function(dataBuffer, hashMethod){
@@ -476,6 +470,122 @@ module.exports.createCert = function(name, publicPEMBuffer){
 	return cert;
 };
 
+var powFormat = 'hex';
+
+
+var createPOWObject = function(object){
+	var copy = copyObject(object);
+	delete copy.proofOfWork;
+	delete copy._rev;
+	return copy;
+};
+
+module.exports.validateProofOfWork = function(object){
+	var proofOfWork = object.proofOfWork;
+	assert.ok(proofOfWork, 'proofOfWork required');
+	var precision = proofOfWork.precision;
+	var hashMethod = proofOfWork.method;
+	var value = proofOfWork.value;
+	assert.ok(precision, 'precision required');
+	assert.ok(hashMethod, 'hashMethod required');
+	assert.ok(value, 'value required');
+
+	var precisionCheckString ='';
+	for(var i =0; i < precision; i ++)
+	{
+		precisionCheckString = precisionCheckString + '0';
+	}
+
+	var copy = createPOWObject(object);
+	var objectString = stringify(copy);
+
+	var toBeHashedBuffer = new Buff(objectString + value.toString());
+	var hashedBuffer = module.exports.hashBuffer(toBeHashedBuffer, hashMethod);
+	var hashedHex = hashedBuffer.toString(powFormat);
+
+	var concat = hashedHex.substr(0, precision);
+	return (concat === precisionCheckString);
+};
+
+
+module.exports.addProofOfWork = function(object, options){
+	options = options ||{};
+	var hashMethod = options.method || 'sha256';
+	var precision= options.precision || 4;
+
+	var precisionCheckString = '';
+	for(var i =0; i < precision; i ++)
+	{
+		precisionCheckString = precisionCheckString + '0';
+	}
+	var copy = createPOWObject(object);
+	var objectString = stringify(copy);
+	var found = false;
+	var value = 0;
+	var toBeHashedBuffer;
+	while (!found)
+	{
+		toBeHashedBuffer = new Buff(objectString + value.toString());
+		var hashedBuffer = module.exports.hashBuffer(toBeHashedBuffer, hashMethod);
+		var hashedHex = hashedBuffer.toString(powFormat);
+		var concat = hashedHex.substr(0, precision);
+		if(concat === precisionCheckString)
+		{
+			found = true;
+		}
+		else
+		{
+			value++;
+		}
+	}
+	copy.proofOfWork = {method: 'sha256', value: value, precision: precision};
+	return copy;
+};
+
+var crypto = require('crypto');
+
+module.exports.addProofOfWorkNode = function(object, options){
+	options = options ||{};
+	var hashMethod = options.method || 'sha256';
+	var precision= options.precision || 4;
+
+
+
+	
+
+	var precisionCheckString = '';
+	for(var i =0; i < precision; i ++)
+	{
+		precisionCheckString = precisionCheckString + '0';
+	}
+	var copy = copyObject(object);
+	delete copy.proofOfWork;
+	var objectString = stringify(copy);
+	var found = false;
+	var value = 0;
+	var toBeHashedBuffer;
+	while (!found)
+	{
+
+		toBeHashedBuffer = new Buff(objectString + value.toString());
+
+		var shasum = crypto.createHash('sha256');
+		shasum.update(toBeHashedBuffer);
+
+		var hashedHex = shasum.digest(powFormat);
+		var concat = hashedHex.substr(0, precision);
+		if(concat === precisionCheckString)
+		{
+			found = true;
+		}
+		else
+		{
+			value++;
+		}
+	}
+	copy.proofOfWork = {method: 'sha256', value: value, precision: precision};
+	return copy;
+};
 
 
 
