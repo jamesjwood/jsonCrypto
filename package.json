@@ -35,6 +35,6 @@
   "dependencies": {
     "node-forge": "0.1.4",
     "canonical-json": "0.0.3",
-    "utils": "git://github.com/jamesjwood/utils.git",
+    "utils": "git://github.com/jamesjwood/utils.git"
   }
 }
