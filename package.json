@@ -25,6 +25,6 @@
   "dependencies": {
     "node-forge": "0.1.4",
     "canonical-json": "0.0.3",
-    "utils": "git://git@github.com/jamesjwood/utils.git"
+    "utils": "git+ssh://git@github.com/jamesjwood/utils.git"
   }
 }
