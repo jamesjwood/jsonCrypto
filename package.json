@@ -4,7 +4,6 @@
   "description": "RSA and AES json encryption",
   "main": "index.js",
   "scripts": {
-    "install": "grunt install",
     "test": "grunt test"
   },
   "repository": {
@@ -15,6 +14,7 @@
   "license": "BSD",
   "devDependencies": {
     "mocha": "1.10.0",
+    "grunt": "0.4.1",
     "grunt-contrib": "0.7.0",
     "grunt-simple-mocha": "0.4.0",
     "grunt-shell": "0.3.0",
@@ -32,7 +32,6 @@
     "grunt-karma": "~0.6.2"
   },
   "dependencies": {
-    "grunt": "0.4.1",
     "node-forge": "0.1.4",
     "canonical-json": "0.0.3",
     "utils": "git://github.com/jamesjwood/utils.git"
