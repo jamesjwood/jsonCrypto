@@ -71,20 +71,42 @@ grunt.registerTask('bundleForge', function(){
 
   // list dependencies in order
   var files = [
-    'util.js',
-    'md5.js',
-    'sha1.js',
-    'sha256.js',
-    'aes.js',
-    'prng.js',
-    'random.js',
-    'hmac.js',
-    'jsbn.js',
-    'oids.js',
-    'asn1.js',
-    'rsa.js',
-    'pki.js'
+  'pkcs7asn1.js',
+  'mgf.js',
+  'mgf1.js',
+  'md.js',
+  'tls.js',
+  'task.js',
+  'rc2.js',
+  'pem.js',
+  'pbe.js',
+  'x509.js',
+  'pss.js',
+  'pkcs7.js',
+  'pkcs12.js',
+  'pbkdf2.js',
+  'log.js',
+  'aesCipherSuites.js',
+  'des.js',
+  'debug.js',
+  'util.js',
+  'md5.js',
+  'sha1.js',
+  'sha256.js',
+  'prng.js',
+  'random.js',
+  'hmac.js',
+  'jsbn.js',
+  'oids.js',
+  'asn1.js',
+  'rsa.js',
+  'pki.js',
+  'aes.js',
+  'pkcs1.js'
   ];
+
+  
+
 
   files = files.map(function(file) {
     return path.join(__dirname, 'node_modules/node-forge/js', file);
@@ -115,6 +137,6 @@ grunt.loadNpmTasks('grunt-karma');
 
 grunt.registerTask('installold', 'shell:makeLib', 'bundleForge');
 grunt.registerTask('install', []);
-grunt.registerTask('test', ['default', 'shell:makeStage','shell:browserify', 'karma']);
+grunt.registerTask('test', ['shell:makeStage','shell:browserify', 'karma']);
 grunt.registerTask('default', ['jshint', 'simplemocha']);
 };

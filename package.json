@@ -27,13 +27,15 @@
     "karma-jasmine": "~0.1.3",
     "karma-requirejs": "~0.1.0",
     "karma-coffee-preprocessor": "~0.1.0",
-    "karma-phantomjs-launcher": "~0.1.0",
+    "karma-phantomjs-launcher": "0.1.0",
     "karma": "~0.10.2",
     "grunt-karma": "~0.6.2"
   },
   "dependencies": {
-    "node-forge": "0.1.4",
     "canonical-json": "0.0.3",
     "utils": "git://github.com/jamesjwood/utils.git"
+  },
+  "browser": {
+    "node-forge": "./lib/forge.min.js",
   }
 }

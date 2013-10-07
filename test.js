@@ -38,21 +38,6 @@ var rootCert = lib.createCert(rootPair.publicPEM);
 
 
 
-/*
----- for checking with URSA
-var ursa = require('ursa');
-var privatePEM = ursa.coercePrivateKey(privatePEMString);
-var publicPEM = ursa.coercePublicKey(publicPEMString);
-
-console.log(privatePEMBase64);
-
-console.log('----');
-console.log(publicPEMBase64);
-*/
-
-
-
-
 describe('jsonCrypto', function () {
     'use strict';
     it('1: should be able to gererate a key pair', function (done) {

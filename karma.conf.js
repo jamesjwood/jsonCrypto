@@ -10,6 +10,7 @@ basePath = 'stage/';
 files = [
 	MOCHA,
 	MOCHA_ADAPTER,
+	'../lib/forge.min.js',
 	'test.js'
 ];
 
