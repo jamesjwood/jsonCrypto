@@ -34,8 +34,5 @@
   "dependencies": {
     "canonical-json": "0.0.3",
     "utils": "git://github.com/jamesjwood/utils.git"
-  },
-  "browser": {
-    "node-forge": "./lib/forge.min.js",
   }
 }
