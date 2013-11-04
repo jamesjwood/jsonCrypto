@@ -4,7 +4,8 @@
   "description": "RSA and AES json encryption",
   "main": "index.js",
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt test",
+    "link": "npm link utils;npm link;"
   },
   "repository": {
     "type": "git",
@@ -13,22 +14,16 @@
   "author": "James Wood <james.wood@datatransparency.com>",
   "license": "BSD",
   "devDependencies": {
-    "mocha": "1.13.x",
+    "mocha": "1.14.x",
     "grunt": "0.4.x",
-    "grunt-contrib": "0.8.x",
     "grunt-simple-mocha": "0.4.x",
     "grunt-shell": "0.5.x",
     "grunt-karma": "0.6.x",
     "browserify": "2.35.x",
-    "karma-script-launcher": "0.1.x",
-    "karma-chrome-launcher": "0.1.x",
-    "karma-firefox-launcher": "0.1.x",
-    "karma-html2js-preprocessor": "0.1.x",
-    "karma-jasmine": "0.1.x",
-    "karma-requirejs": "0.1.x",
-    "karma-coffee-preprocessor": "0.1.x",
-    "karma-phantomjs-launcher": "0.1.x",
-    "karma": "0.10.x"
+    "grunt-contrib-jshint": "0.7.x",
+    "grunt-contrib-watch": "0.5.x",
+    "karma-mocha": "0.1.x",
+    "karma-safari-launcher": "0.1.x"
   },
   "dependencies": {
     "canonical-json": "0.0.x",

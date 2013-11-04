@@ -44,8 +44,7 @@ module.exports = function(grunt) {
         stdout: true,
         stderr: true,
         failOnError: true
-      }
-      ,
+      },
       browserify:{
         command: 'node ./node_modules/browserify/bin/cmd.js  --debug -o ./stage/test.js -i domain -e ./test.js;',
         stdout: true,
@@ -57,7 +56,7 @@ module.exports = function(grunt) {
       local: {
         configFile: 'karma.conf.js',
         singleRun: true,
-        browsers: ['Chrome'] //, 'Firefox', 'Safari', 'Opera'
+        browsers: ['Safari'] //, 'Firefox', 'Safari', 'Opera'
       }
     },
   });
@@ -129,7 +128,8 @@ grunt.registerTask('bundleForge', function(){
   console.log('RSA bundle written to: ' + bundle);
 });
 
-grunt.loadNpmTasks('grunt-contrib');
+grunt.loadNpmTasks('grunt-contrib-watch');
+grunt.loadNpmTasks('grunt-contrib-jshint');
 grunt.loadNpmTasks('grunt-shell');
 grunt.loadNpmTasks('grunt-simple-mocha');
 
