@@ -10,7 +10,8 @@ module.exports = function(config) {
 		files: [
 			'../lib/forge.min.js',
 			'test.js'
-		]
+		],
+        port: 9878
 	});
 };
 
