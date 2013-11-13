@@ -6,12 +6,20 @@ module.exports = function(grunt) {
   // Project configuration.
   grunt.initConfig({
    watch: {
-      js: {
+      dependencies: {
         options: {
           debounceDelay: 5000,
           interrupt: true
         },
         files: getWatchers(pkg),
+        tasks: ['test']
+      },  
+      local: {
+        options: {
+          debounceDelay: 5000,
+          interrupt: true
+        },
+        files: ['*.js','src/**/*.js', 'test/**/*.js'],
         tasks: ['default']
       }
     },
@@ -149,6 +157,6 @@ require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks);
 
 grunt.registerTask('installold', 'shell:makeLib', 'bundleForge');
 grunt.registerTask('install', []);
-grunt.registerTask('test', ['simplemocha','shell:makeStage','shell:browserify', 'karma']);
-grunt.registerTask('default', ['jshint', 'bump']);
+grunt.registerTask('test', ['jshint','simplemocha','shell:makeStage','shell:browserify', 'karma']);
+grunt.registerTask('default', ['test', 'bump']);
 };

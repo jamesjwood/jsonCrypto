@@ -1,6 +1,6 @@
 {
     "name": "jsonCrypto",
-    "version": "0.0.0-26",
+    "version": "0.0.0-33",
     "description": "RSA and AES json encryption",
     "main": "index.js",
     "scripts": {
