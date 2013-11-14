@@ -1,11 +1,11 @@
 {
     "name": "jsonCrypto",
-    "version": "0.0.0-33",
+    "version": "0.0.0-41",
     "description": "RSA and AES json encryption",
     "main": "index.js",
     "scripts": {
         "test": "grunt test",
-        "link": "rm -R node_modules; npm link getWatchers; npm link utils; npm link grunt-getwatchers; npm link;"
+        "link": "rm -R node_modules; npm link; npm link getWatchers; npm link utils; npm link grunt-getwatchers; "
     },
     "repository": {
         "type": "git",
