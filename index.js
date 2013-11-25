@@ -7,6 +7,8 @@
 
 var assert = require('assert');
 var stringify = require('canonical-json');
+var utils = require('utils');
+var is = utils.is;
 
 var Buff = require('buffer').Buffer;
 
@@ -33,12 +35,12 @@ var rsa = pki.rsa;
 
 
 
-var copyObject= function(object){
+var copyObject= function copyObject(object){
 	var copy =  JSON.parse(JSON.stringify(object));
 	return copy;
 };
 
-var createSignableObject = function(object){
+var createSignableObject = function createSignableObject(object){
 	var copy = copyObject(object);
 	delete copy.signature;
 	for(var name in copy)
@@ -50,25 +52,25 @@ var createSignableObject = function(object){
 	}
 	return copy;
 };
-var hashBufferToDigest = function(dataBuffer, hashMethod){
+var hashBufferToDigest = function hashBufferToDigest(dataBuffer, hashMethod){
 	var md = Forge.md[hashMethod].create();
 	md.update(dataBuffer.toString('utf8'), 'utf8');
 	return md;
 };
 
-var hashDigestToBuffer = function(md){
+var hashDigestToBuffer = function hashDigestToBuffer(md){
 	var hashBuf = new Buff(md.digest().toHex(), 'hex');
 	return hashBuf;
 };
 
-module.exports.hashBuffer = function(dataBuffer, hashMethod){
+module.exports.hashBuffer = function hashBuffer(dataBuffer, hashMethod){
 	var md = hashBufferToDigest(dataBuffer, hashMethod);
 	var hashBuf = new Buff(md.digest().toHex(), 'hex');
 	return hashBuf;
 };
 
 
-module.exports.generateKeyPEMBufferPair = function(modulus, exponent)
+module.exports.generateKeyPEMBufferPair = function generateKeyPEMBufferPair(modulus, exponent)
 {
 	var keypair = rsa.generateKeyPair(modulus, exponent);
 	var publicPEMBuffer = new Buff(pki.publicKeyToPem(keypair.publicKey), 'utf8');
@@ -77,7 +79,7 @@ module.exports.generateKeyPEMBufferPair = function(modulus, exponent)
 };
 
 
-module.exports.hashAndSignBuffer = function(dataBuffer, privateKeyPEMBuffer, log){
+module.exports.hashAndSignBuffer = function hashAndSignBuffer(dataBuffer, privateKeyPEMBuffer, log){
 	assert.ok(dataBuffer);
 	assert.ok(privateKeyPEMBuffer);
 	assert.ok(log);
@@ -102,7 +104,7 @@ module.exports.hashAndSignBuffer = function(dataBuffer, privateKeyPEMBuffer, log
 	return sigBuf;
 };
 
-module.exports.hashAndVerifyBuffer = function(hashBuffer, publicKeyPEMBuffer, signatureBuffer){
+module.exports.hashAndVerifyBuffer = function hashAndVerifyBuffer(hashBuffer, publicKeyPEMBuffer, signatureBuffer){
 	var hashBytes = Forge.util.hexToBytes(hashBuffer.toString('hex'), 'hex');
 	var publicKey = pki.publicKeyFromPem(publicKeyPEMBuffer.toString('utf8'));
 	var sigHex = signatureBuffer.toString('hex');
@@ -111,7 +113,7 @@ module.exports.hashAndVerifyBuffer = function(hashBuffer, publicKeyPEMBuffer, si
 	return verified;
 };
 
-module.exports.createPublicKeyPEMFingerprintBuffer = function(publicKeyPEMBuff)
+module.exports.createPublicKeyPEMFingerprintBuffer = function createPublicKeyPEMFingerprintBuffer(publicKeyPEMBuff)
 {
 	assert.ok(publicKeyPEMBuff);
 	var fingerBuff = module.exports.hashBuffer(publicKeyPEMBuff,'sha1');
@@ -119,7 +121,7 @@ module.exports.createPublicKeyPEMFingerprintBuffer = function(publicKeyPEMBuff)
 };
 
 
-module.exports.createSignature = function(object, privateKeyPEMBuffer, publicCert, includeSigner, log){
+module.exports.createSignature = function createSignature(object, privateKeyPEMBuffer, publicCert, includeSigner, log){
 	var objectString = stringify(object);
 	var objectBuff = new Buff(objectString);
 	if(!includeSigner)
@@ -151,7 +153,7 @@ module.exports.createSignature = function(object, privateKeyPEMBuffer, publicCer
 	}
 	return that;
 };
-module.exports.getTrustedCert = function(certOrFingerprint, trustedCerts){
+module.exports.getTrustedCert = function getTrustedCert(certOrFingerprint, trustedCerts){
 	var foundCert;
 	trustedCerts.map(function(trustedCert){
 		if((typeof certOrFingerprint === 'object' && trustedCert.id === certOrFingerprint.id) || (typeof certOrFingerprint === 'string' && trustedCert.id === certOrFingerprint))
@@ -162,7 +164,7 @@ module.exports.getTrustedCert = function(certOrFingerprint, trustedCerts){
 	return foundCert;
 };
 
-module.exports.verifySignature = function(signature, object, log){
+module.exports.verifySignature = function verifySignature(signature, object, log){
 	assert.ok(signature.signer, 'signature must have a signer');
 	var publicCert = signature.signer;
 
@@ -189,14 +191,14 @@ module.exports.verifySignature = function(signature, object, log){
 	return verified;
 };
 
-module.exports.signObject = function(object, privateKeyPEMBuffer, publicCert, includeSigner, log){
+module.exports.signObject = function signObject(object, privateKeyPEMBuffer, publicCert, includeSigner, log){
 	var signable = createSignableObject(object);
 	var copy = copyObject(object);
 	copy.signature = module.exports.createSignature(signable, privateKeyPEMBuffer, publicCert, includeSigner, log);
 	return copy;
 };
 
-module.exports.verifyObjectIsSigned = function(object, log){
+module.exports.verifyObjectIsSigned = function verifyObjectIsSigned(object, log){
 	if(!object.signature)
 	{
 		return false;
@@ -211,7 +213,7 @@ module.exports.verifyObjectIsSigned = function(object, log){
 };
 
 
-module.exports.verifyObject = function(object, log){
+module.exports.verifyObject = function verifyObject(object, log){
 	try
 	{
 		assert.ok(object);
@@ -236,7 +238,7 @@ module.exports.verifyObject.SIGNATURE_INVALID = 0;
 module.exports.verifyObject.SIGNATURE_VALID = 2;
 
 
-module.exports.encrypt = function(object, fieldsToBeEncrypted, rsaKeys, log){
+module.exports.encrypt = function encrypt(object, fieldsToBeEncrypted, rsaKeys, log){
 	var copy = copyObject(object);
 
 	fieldsToBeEncrypted.forEach(function(name){
@@ -252,7 +254,7 @@ module.exports.encrypt = function(object, fieldsToBeEncrypted, rsaKeys, log){
 	return copy;
 };
 
-module.exports.encrypt2 = function(object, fieldsToBeEncrypted, rsaKeys, log){
+module.exports.encrypt2 = function encrypt2(object, fieldsToBeEncrypted, rsaKeys, log){
 	var copy = copyObject(object);
 
 	var objectToBeEncrypted = {};
@@ -271,7 +273,7 @@ module.exports.encrypt2 = function(object, fieldsToBeEncrypted, rsaKeys, log){
 	return copy;
 };
 
-module.exports.decrypt2 = function(object, fingerprintHex, privatePEMBuffer, log){
+module.exports.decrypt2 = function decrypt2(object, fingerprintHex, privatePEMBuffer, log){
 	var copy = copyObject(object);
 	assert.ok(copy.encrypted);
 	var encrypted = copy.encrypted;
@@ -287,7 +289,7 @@ module.exports.decrypt2 = function(object, fingerprintHex, privatePEMBuffer, log
 	return copy;
 };
 
-module.exports.decrypt = function(object, fieldsToBeDecrypyted, fingerprintHex, privatePEMBuffer, log){
+module.exports.decrypt = function decrypt(object, fieldsToBeDecrypyted, fingerprintHex, privatePEMBuffer, log){
 	var copy = copyObject(object);
 	fieldsToBeDecrypyted.forEach(function(name){
 		if(typeof copy[name] !== 'undefined')
@@ -302,7 +304,7 @@ module.exports.decrypt = function(object, fieldsToBeDecrypyted, fingerprintHex, 
 };
 
 
-module.exports.buffToJSONObject = function(buffer){
+module.exports.buffToJSONObject = function buffToJSONObject(buffer){
 	var obj = {
 		value: buffer.toString(DEFAULT_ENCODING),
 		encoding: DEFAULT_ENCODING
@@ -310,18 +312,18 @@ module.exports.buffToJSONObject = function(buffer){
 	return obj;
 };
 
-module.exports.jSONObjectToBuffer = function(object){
+module.exports.jSONObjectToBuffer = function jSONObjectToBuffer(object){
 	var B  = new Buff(object.value, object.encoding);
 	return B;
 };
 
-module.exports.getRandomBuffer = function(bytes){
+module.exports.getRandomBuffer = function getRandomBuffer(bytes){
 	var randomBytes = Forge.random.getBytesSync(bytes);
 	var randomBuffer = new Buff(Forge.util.bytesToHex(randomBytes), 'hex');
 	return randomBuffer;
 };
 
-module.exports.encryptRSA = function(secretBuffer, publicKeyBuffer, log)
+module.exports.encryptRSA = function encryptRSA(secretBuffer, publicKeyBuffer, log)
 {
 	var publicKey = pki.publicKeyFromPem(publicKeyBuffer.toString('utf8'));
 	var secretBytes = Forge.util.hexToBytes(secretBuffer.toString('hex'));
@@ -331,14 +333,14 @@ module.exports.encryptRSA = function(secretBuffer, publicKeyBuffer, log)
 	return encodedKeyBuffer;
 };
 
-module.exports.decryptRSA = function(encryptedBuffer, privateKeyBuffer, log){
+module.exports.decryptRSA = function decryptRSA(encryptedBuffer, privateKeyBuffer, log){
 	var privateKey = pki.privateKeyFromPem(privateKeyBuffer.toString('utf8'));
 	var encryptedBytes = Forge.util.hexToBytes(encryptedBuffer.toString('hex'));
 	var decryptedBytes = privateKey.decrypt(encryptedBytes);
 	var decryptedBuffer = new Buff(Forge.util.bytesToHex(decryptedBytes), 'hex');
 	return decryptedBuffer;
 };
-module.exports.encryptAES = function(toBeEncryptedBuff, aesKeyBuffer, log){
+module.exports.encryptAES = function encryptAES(toBeEncryptedBuff, aesKeyBuffer, log){
 	var ivBuff = module.exports.getRandomBuffer(16);
 	var ivBytes = Forge.util.hexToBytes(ivBuff.toString('hex'));
 	var aesKeyBytes = Forge.util.hexToBytes(aesKeyBuffer.toString('hex'));
@@ -357,10 +359,14 @@ module.exports.encryptAES = function(toBeEncryptedBuff, aesKeyBuffer, log){
 	return encrypted;
 };
 
-module.exports.decryptAES = function(encrypted, aesKeyBuffer, log){
-	assert.ok(encrypted.data);
-	assert.ok(encrypted.method);
-	assert.ok(encrypted.iv);
+module.exports.decryptAES = function decryptAES(encrypted, aesKeyBuffer, log){
+	is.object(aesKeyBuffer, 'aesKeyBuffer');
+	is.function(log, 'log');
+	is.object(encrypted, 'encrypted');
+	is.object(encrypted.data, 'encrypted.data');
+	is.string(encrypted.method, 'encrypted.method');
+	is.object(encrypted.iv, 'encrypted.iv');
+
 
 	var encryptedDataBuffer = module.exports.jSONObjectToBuffer(encrypted.data);
 
@@ -369,11 +375,41 @@ module.exports.decryptAES = function(encrypted, aesKeyBuffer, log){
 
 	var encryptedDataBytes = Forge.util.hexToBytes(encryptedDataBuffer.toString('hex'));
 
-	var aesKeyBytes = Forge.util.hexToBytes(aesKeyBuffer.toString('hex'));
-	var cipher = Forge.aes.createDecryptionCipher(aesKeyBytes);
-	cipher.start(ivBytes);
-	cipher.update(Forge.util.createBuffer(encryptedDataBytes));
-	cipher.finish();
+	var aesKeyHex = aesKeyBuffer.toString('hex');
+
+
+	assert.ok(aesKeyHex.length === 32, 'AES key length must be 32');
+
+
+	var cipher;
+	try
+	{
+		log('trying to generate cipher from aeskey: ' + aesKeyHex);
+		var aesKeyBytes = Forge.util.hexToBytes(aesKeyHex);
+		cipher = Forge.aes.createDecryptionCipher(aesKeyBytes);
+	}
+	catch(err)
+	{
+		var e = new Error('Error creating decryption cipher, bad AES key: ' + aesKeyHex);
+		e.inner = err;
+		e.code = 8000;
+		throw e;
+	}
+	
+	try
+	{
+		log('trying the decrypt the data');
+		cipher.start(ivBytes);
+		cipher.update(Forge.util.createBuffer(encryptedDataBytes));
+		cipher.finish();
+	}
+	catch(err)
+	{
+		var e = new Error('Error decrypting data');
+		e.inner = err;
+		e.code = 8001;
+		throw e;
+	}
 
 	var decryptedHex = cipher.output.toHex();
 	var decryptedBuff = new Buff(decryptedHex, 'hex');
@@ -381,7 +417,7 @@ module.exports.decryptAES = function(encrypted, aesKeyBuffer, log){
 
 };
 
-module.exports.encryptJSON  = function(jsonBuff, rsaKeys, log){
+module.exports.encryptJSON  = function encryptJSON(jsonBuff, rsaKeys, log){
 	var aesKeyBuffer = module.exports.getRandomBuffer(16);
 	var encrypted = module.exports.encryptAES(jsonBuff, aesKeyBuffer, log.wrap('encryptAES'));
 	encrypted.keys = {};
@@ -396,7 +432,7 @@ module.exports.encryptJSON  = function(jsonBuff, rsaKeys, log){
 	return encrypted;
 };
 
-module.exports.decryptJSON = function(encrypted, fingerprintHex, privateKeyPEMBuff, log){
+module.exports.decryptJSON = function decryptJSON(encrypted, fingerprintHex, privateKeyPEMBuff, log){
 
 	assert.ok(encrypted.keys);
 	assert.ok(fingerprintHex);
@@ -415,7 +451,7 @@ module.exports.decryptJSON = function(encrypted, fingerprintHex, privateKeyPEMBu
 	return decryptedBuff;
 };
 
-module.exports.createCert = function(publicPEMBuffer){
+module.exports.createCert = function createCert(publicPEMBuffer){
 	var fingerprint = module.exports.createPublicKeyPEMFingerprintBuffer(publicPEMBuffer);
 	var cert = {
 		id: fingerprint.toString('base64'),
@@ -427,14 +463,14 @@ module.exports.createCert = function(publicPEMBuffer){
 var powFormat = 'hex';
 
 
-var createPOWObject = function(object){
+var createPOWObject = function createPOWObject(object){
 	var copy = copyObject(object);
 	delete copy.proofOfWork;
 	delete copy._rev;
 	return copy;
 };
 
-module.exports.validateProofOfWork = function(object){
+module.exports.validateProofOfWork = function validateProofOfWork(object){
 	var proofOfWork = object.proofOfWork;
 	assert.ok(proofOfWork, 'proofOfWork required');
 	var precision = proofOfWork.precision;
@@ -462,7 +498,7 @@ module.exports.validateProofOfWork = function(object){
 };
 
 
-module.exports.addProofOfWork = function(object, options){
+module.exports.addProofOfWork = function addProofOfWork(object, options){
 	options = options ||{};
 	var hashMethod = options.method || 'sha256';
 	var precision= options.precision || 4;
@@ -498,7 +534,7 @@ module.exports.addProofOfWork = function(object, options){
 
 var crypto = require('crypto');
 
-module.exports.addProofOfWorkNode = function(object, options){
+module.exports.addProofOfWorkNode = function addProofOfWorkNode(object, options){
 	options = options ||{};
 	var hashMethod = options.method || 'sha256';
 	var precision= options.precision || 4;
