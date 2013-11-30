@@ -5,6 +5,7 @@
 /*global after */
 
 
+
 var assert = require('assert');
 var utils = require('utils');
 var events = require('events');
@@ -40,6 +41,8 @@ var rootCert = lib.createCert(rootPair.publicPEM);
 
 describe('jsonCrypto', function () {
     'use strict';
+    process.env.LOG = 'false';
+
     it('1: should be able to gererate a key pair', function (done) {
         var log = masterLog.wrap('1');
         var pair = lib.generateKeyPEMBufferPair(MODULUS, EXPONENT);
@@ -48,6 +51,7 @@ describe('jsonCrypto', function () {
         assert.ok(pair.privatePEM);
 
         done();
+
     });
 
 
