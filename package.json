@@ -1,11 +1,11 @@
 {
   "name": "jsonCrypto",
-  "version": "0.0.0-57",
+  "version": "0.0.4",
   "description": "RSA and AES json encryption",
   "main": "index.js",
   "scripts": {
     "test": "grunt test",
-    "link": "rm -R node_modules; npm link; npm link getWatchers; npm link utils; npm link grunt-getwatchers; "
+    "link": "rm -R node_modules; npm link; npm link getWatchers; npm link utils;"
   },
   "repository": {
     "type": "git",
@@ -14,24 +14,22 @@
   "author": "James Wood <james.wood@datatransparency.com>",
   "license": "BSD",
   "devDependencies": {
-    "mocha": "1.14.x",
+    "mocha": "1.17.x",
     "grunt": "0.4.x",
     "grunt-simple-mocha": "0.4.x",
-    "grunt-shell": "0.5.x",
+    "grunt-shell": "0.6.x",
     "grunt-karma": "0.6.x",
-    "browserify": "2.35.x",
-    "grunt-contrib-jshint": "0.7.x",
+    "browserify": "3.20.x",
+    "grunt-contrib-jshint": "0.8.x",
     "grunt-contrib-watch": "0.5.x",
     "karma-mocha": "0.1.x",
     "karma-safari-launcher": "0.1.x",
     "matchdep": "0.3.x",
     "grunt-bumpx": "0.1.x",
-    "getWatchers": "git://github.com/jamesjwood/getWatchers.git",
-    "grunt-bumpup": "~0.4.2"
+    "grunt-bumpup": "0.5.x"
   },
   "dependencies": {
     "canonical-json": "0.0.x",
-    "utils": "git://github.com/jamesjwood/utils.git",
     "node-forge": "0.2.x"
   }
 }
