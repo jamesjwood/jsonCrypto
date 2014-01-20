@@ -29,6 +29,7 @@
     "grunt-bumpup": "0.5.x"
   },
   "dependencies": {
+    "utils": "git://github.com/jamesjwood/utils.git",
     "canonical-json": "0.0.x",
     "node-forge": "0.2.x"
   }
