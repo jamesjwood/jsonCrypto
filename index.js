@@ -323,6 +323,33 @@ module.exports.getRandomBuffer = function getRandomBuffer(bytes){
 	return randomBuffer;
 };
 
+module.exports.verifyCertificateAndPrivateKeys = function(cert, privateKeyBuffer, log){
+	utils.is.object(cert);
+	utils.is.object(privateKeyBuffer);
+	utils.is.fn(log);
+
+	var myBuff = new Buffer("hello");
+
+	var publicKeyBuffer = module.exports.jSONObjectToBuffer(cert.key);
+
+	try{
+		var encrypted = module.exports.encryptRSA(myBuff, publicKeyBuffer, log.wrap('encryptRSA'));
+		var decrypted = module.exports.decryptRSA(encrypted, privateKeyBuffer, log.wrap('decryptRSA'));
+		if (decrypted.toString() === 'hello')
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	catch(error)
+	{
+		return false;
+	}
+};
+
 module.exports.encryptRSA = function encryptRSA(secretBuffer, publicKeyBuffer, log)
 {
 	var publicKey = pki.publicKeyFromPem(publicKeyBuffer.toString('utf8'));

@@ -243,4 +243,17 @@ describe('jsonCrypto', function () {
         assert.ok(valid);
         done();
     });
+
+    it('14: should be able to verify key and cert', function (done) {
+        var log = masterLog.wrap('14');
+        assert.ok(lib.verifyCertificateAndPrivateKeys(rootCert, rootPrivatePEMBuffer, log.wrap('verifying')));
+        var newString = rootPrivatePEMBuffer.toString('base64');
+        newString = newString.substring(0, newString.length -4);
+        newString = newString + "5555";
+
+        var falseBuffer = new Buffer(newString);
+
+        assert.ok(lib.verifyCertificateAndPrivateKeys(rootCert, falseBuffer, log.wrap('verifying false')) === false);
+        done();
+    });
 });
