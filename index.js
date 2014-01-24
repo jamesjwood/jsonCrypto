@@ -7,7 +7,7 @@
 
 var assert = require('assert');
 var stringify = require('canonical-json');
-var utils = require('utils');
+var utils = require('tsuju-utils');
 var is = utils.is;
 
 var Buff = require('buffer').Buffer;
