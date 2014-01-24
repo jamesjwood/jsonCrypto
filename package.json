@@ -1,11 +1,11 @@
 {
-  "name": "jsonCrypto",
+  "name": "tsuju-jsoncrypto",
   "version": "0.0.5-0",
   "description": "RSA and AES json encryption",
   "main": "index.js",
   "scripts": {
     "test": "grunt test",
-    "link": "rm -R node_modules; npm link; npm link getWatchers; npm link utils;"
+    "link": "rm -R node_modules; npm link;npm link tsuju-utils;"
   },
   "repository": {
     "type": "git",
@@ -30,7 +30,7 @@
     "grunt-browserify": "~1.3.0"
   },
   "dependencies": {
-    "utils": "git://github.com/jamesjwood/utils.git",
+    "tsuju-utils": "x",
     "canonical-json": "0.0.x",
     "node-forge": "0.2.x"
   }
